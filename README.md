@@ -1,5 +1,6 @@
 # Minux
-**Current version 1.2**
+**Current version 1.2.1**
+
 Minux is a minimal Linux distribution designed to run on both real hardware and virtual environments such as QEMU or VirtualBox with serial console support, I tried to make it as simple as possible, to keep minimal size
 The system is based on initramfs (BusyBox) as user space, and a tiny kernel configuration.
 
@@ -105,6 +106,9 @@ In release there are two iso files:
 - minux-<`version`>.iso -> default console (tty0) to be used on standard linux, WSL2, or other virtual environments ;
 - minux-serial.iso      -> serial console only (ttyS0) to be used on Termux or WSL1.
 
+### Release note
 
+You can login now as **root** or **user**
+**No password** required.
 
 
