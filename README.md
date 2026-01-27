@@ -108,4 +108,9 @@ I found a way to boot the serial version (ttyS0) and the console version (tty0) 
 
 use the -nographic switch if you want ttyS0
 
+### Changes from v1.2.1
+- getty is used instead of login
+- one iso that handles both tty0 and ttyS0
+- banner added at login
+
 
