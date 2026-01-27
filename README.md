@@ -11,9 +11,8 @@ Kernel version 6.18.6
 
 Prebuilt binaries are available in **GitHub Releases**.
 
-- `minux-<version>.iso` – Bootable ISO with default console
-- `minux-serial-<version>.iso` – Bootable ISO with ttyS0, for Termux and WSL1 use
-- `minux-boot.tar.xz` – Compressed bundle containing:
+- `minux-<version>.iso` – Bootable ISO with tty0 or ttyS0
+- `minux-boot-<version>.tar.xz` – Compressed bundle containing:
   - `bzImage`
   - `initramfs.cpio`
 
@@ -29,7 +28,7 @@ When running under WSL1 or Termux, you must use the -nographic switch, otherwise
 
 ### Boot kernel + initramfs
 ```bash
-tar -xJf minux-boot.tar.xz
+tar -xJf minux-boot-<version>.tar.xz
 
 qemu-system-x86_64 \
   -kernel bzImage \
@@ -43,7 +42,7 @@ The -append "console=ttyS0" and -nographic options are only required when runnin
 From version 1.2 the system supports adding a hard drive.
 - For the iso version :
 ```bash
-qemu-system-x86_64 -cdrom minux.iso -drive file=disk.img
+qemu-system-x86_64 -cdrom minux-<version>.iso -drive file=disk.img
 ```
 
 - For the kernel + initramfs version
@@ -100,15 +99,13 @@ Add format=qcow2 or raw in **-drive** switch depending on your choice
 
 **-drive file=disk.img,format=raw**
 
-### Note
+### Login
+**root** or **user** with **no password**
 
-In release there are two iso files:
-- minux-<`version`>.iso -> default console (tty0) to be used on standard linux, WSL2, or other virtual environments ;
-- minux-serial.iso      -> serial console only (ttyS0) to be used on Termux or WSL1.
+### 1.3 Release note
 
-### Release note
+I found a way to boot the serial version (ttyS0) and the console version (tty0) from the same iso, so in this release there is only **one iso file**
 
-You can login now as **root** or **user**
-**No password** required.
+use the -nographic switch if you want ttyS0
 
 
