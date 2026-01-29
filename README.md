@@ -1,5 +1,5 @@
 # Minux
-**Current version 1.3.2**
+**Current version 1.4**
 
 Minux is a minimal Linux distribution designed to run on both real hardware and virtual environments such as QEMU or VirtualBox with serial console support, I tried to make it as simple as possible, to keep minimal size
 The system is based on initramfs (BusyBox) as user space, and a tiny kernel configuration.
@@ -102,14 +102,13 @@ Add format=qcow2 or raw in **-drive** switch depending on your choice
 ### Login
 **root** or **user** with **no password**
 
-### 1.3 Release note
+### 1.4 Release note
 
-- The system uses now **BusyBox init** and reads config from /etc/inittab 
-- alias for **shutdown** and **ll** added
+- busybox is now dynamically linked with musl
+- musl lib added /lib/ld-musl-x86_64.so.1
+- ldd command added
 
-### Changes from v1.3.1
-- getty is used instead of login
-- one iso that handles both tty0 and ttyS0
-- banner added at login
+
+
 
 
