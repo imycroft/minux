@@ -108,7 +108,40 @@ Add format=qcow2 or raw in **-drive** switch depending on your choice
 - musl lib added /lib/ld-musl-x86_64.so.1
 - ldd command added
 
+### Notes
+minux direcotries added
+- rootfs contains the system
+- busybox contains the .config file
+- linux-6.16.6 contains the .config file + the bzImage (kernel)
 
+## Create the cpio archive
+```bash
+cd rootfs
+find . | cpio -o -H newc > ../initramfs.cpio
+```
+## Compile the linux kernel
+- Download or clone the linux kernel & extract it
+- Copy the config file to use the same config as minux
+```bash
+wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.18.8.tar.xz
+tar xvf linux-6.18.8.tar.xz
+cp linux-6.18.6/.config linux-6.18.8/
+cd linux-6.18.8
+```
+- If you want you can check the configuration by running 
+**make sure you inside the linux-6.18.8 folder before running these commands**
+```bash
+make menuconfig
+```
+- Compile the kernel
+```bash
+make -j$(nproc)
+```
+- Copy the resulting kernel to minux folder
+```bash
+cp arch/x86/boot/bzImage ../
+```
+- Now you can use the commands above (section **Boot kernel + initramfs**) to start the system.
 
 
 

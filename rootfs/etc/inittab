@@ -1,0 +1,12 @@
+::sysinit:/bin/mount -t devtmpfs devtmpfs /dev
+::sysinit:/bin/mount -t proc proc /proc
+::sysinit:/bin/mount -t sysfs sysfs /sys
+::sysinit:/bin/mount -a
+::sysinit:/bin/dmesg -n 3
+::sysinit:/bin/sh -c '[ -f /etc/hostname ] && hostname "$(cat /etc/hostname)"'
+
+tty1::respawn:/sbin/getty 38400 tty1
+ttyS0::respawn:/sbin/getty -L 115200 ttyS0 vt100
+
+::ctrlaltdel:/sbin/reboot
+::shutdown:/sbin/shutdown.sh

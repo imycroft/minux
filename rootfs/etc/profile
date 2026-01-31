@@ -1,0 +1,12 @@
+# Minimal PATH for root
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+PS1='\u@\h:\w$( [ "$(id -u)" -eq 0 ] && echo "#" || echo "$" ) '
+
+export PS1
+
+# Minux system-wide shell configuration
+
+alias ll='ls -l'
+alias shutdown='poweroff -f'
+
