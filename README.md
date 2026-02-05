@@ -1,8 +1,8 @@
 # Minux
-**Current version 1.4**
+**Current version 2.0**
 
 Minux is a minimal Linux distribution designed to run on both real hardware and virtual environments such as QEMU or VirtualBox with serial console support, I tried to make it as simple as possible, to keep minimal size
-The system is based on initramfs (BusyBox) as user space, and a tiny kernel configuration.
+The system can run live or be installed **check the installation instruction**
 
 ## Kernel version
 Kernel version 6.18.6
@@ -14,7 +14,7 @@ Prebuilt binaries are available in **GitHub Releases**.
 - `minux-<version>.iso` – Bootable ISO with tty0 or ttyS0
 - `minux-boot-<version>.tar.xz` – Compressed bundle containing:
   - `bzImage`
-  - `initramfs.cpio`
+  - `initramfs.cpio.zst`
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ Prebuilt binaries are available in **GitHub Releases**.
 
 Use -nographic if you want a headless console; otherwise, you can omit the -nographic option.
 ```bash
-qemu-system-x86_64 -cdrom minux-<`version`>.iso -m 512 -nographic
+qemu-system-x86_64 -cdrom minux-<`version`>.iso -nographic
 ```
 When running under WSL1 or Termux, you must use the -nographic switch, otherwise the system will fail to display the console and may not function properly.
 
@@ -34,40 +34,31 @@ qemu-system-x86_64 \
   -kernel bzImage \
   -initrd initramfs.cpio \
   -append "console=ttyS0" \
-  -m 512 -nographic
+  -nographic
 ```
 The -append "console=ttyS0" and -nographic options are only required when running in Termux or WSL1; on standard Linux or other virtual environments, they can be omitted.
 
-### Boot using persistence
-From version 1.2 the system supports adding a hard drive.
-- For the iso version :
+## Install
+From version 2.0 the system can be installed. if you don't have a disk, please see **Create the disk** section.
+
 ```bash
-qemu-system-x86_64 -cdrom minux-<version>.iso -drive file=disk.img
+qemu-system-x86_64 -cdrom minux-<version>.iso -drive file=minux.img,format=raw
 ```
 
-- For the kernel + initramfs version
-```bash
-qemu-system-x86_64 -kernel bzImage -initrd initramfs.cpio -drive file=disk.img
-```
-The system automatically detects and mount the disk on /root, the disk will appear as 
+The disk will appear as 
 ```bash
 /dev/sda
 ```
-**The /root folder is persistent now.**
 
-**In order to flush changes to the disk, you must shutdown the system with the command** 
-```bash
-poweroff -f
-```
 ### Create the disk
-There are several ways for creating the disk image
+There are several ways for creating the disk image, the minimum size recommended is 64M, as the whole system will take 15MB after installation is finished.
 1. Using native commands
 ```bash
-# create the 8MB disk
-dd if=/dev/zero of=disk.img bs=1M count=8
+# create the disk
+dd if=/dev/zero of=minux.img bs=1M count=64
 
 # attach it as a loop device
-sudo losetup -fP disk.img
+sudo losetup -fP minux.img
 
 # Find which loop device was assigned:
 losetup -a
@@ -79,7 +70,9 @@ sudo mkfs.ext4 /dev/loop0
 # detach the loop
 sudo losetup -d /dev/loop0
 ```
-Now disk.img is a ready-to-use block device image.
+Now minux.img is a ready-to-use block device image.
+
+**Skip 2 if you have already created the disk image using the method 1**
 
 2. Using QEMU
 qcow2 format
@@ -99,26 +92,73 @@ Add format=qcow2 or raw in **-drive** switch depending on your choice
 
 **-drive file=disk.img,format=raw**
 
-### Login
-**root** or **user** with **no password**
+- login as root with no password
+- type :
+```bash
+minux-install /dev/sda
+```
+Be carefull when running this command, as the whole minux.img will be erased and formated, press Y to confirm.
+- after the installation finishes shutdown the system
+```bash
+poweroff
+```
 
-### 1.4 Release note
+- start your newly installed system :
+```bash
+qemu-system-x86_64 -drive file=minux.img,format=raw -nographic
+```
+- enter your password as root
 
-- busybox is now dynamically linked with musl
-- musl lib added /lib/ld-musl-x86_64.so.1
-- ldd command added
+### Configuration of the doas command
+If you want to run commands as root, while logged in as your user, follow these steps :
+- edit the /etc/doas.conf file as root, you can install nano if you are not familiar with vi, bur running **apk add nano**
+```bash
+vi /etc/doas.conf
+```
+uncomment the line : # permit persist :wheel, by removing #
+
+save and exit
+
+#### Notes for vi
+- press i to enter edit mode
+- press ESC to leave edit mode
+- press : to enter command mode
+- press wq to save and exit
+
+- add your username to the /etc/group file
+```bash
+vi /etc/group
+```
+add your username at the end of the line **wheel:x:10:** to be **wheel:x:10:your_user_name_here**
+
+save and exit
+
+- logout and login as your username, check you can doas :
+```bash
+doas whoami
+```
+You must see **root**
+
+
+
+### 2.0 Release note
+
+- Network access added, the eth0 is configured to connect using QEMU, so if you run the system using QEMU you can access internet
+- **apk** is the default package manager, i had to choose between several package managers, I finished by adopting **apk**
+- The system can run **live** or be **installed**
 
 ### Notes
-minux direcotries added
-- rootfs contains the system
-- busybox contains the .config file
-- linux-6.16.6 contains the .config file + the bzImage (kernel)
 
-## Create the cpio archive
+- busybox contains the .config file
+- linux-6.18.6 contains the .config file 
+
+## How to Create the cpio archive
 ```bash
 cd rootfs
-find . | cpio -o -H newc > ../initramfs.cpio
+find . | cpio -o -H newc | zstd -19 -T0 > ../initramfs.cpio.zst
 ```
+I used zstd commpression to reduce the initramfs.cpio size
+
 ## Compile the linux kernel
 - Download or clone the linux kernel & extract it
 - Copy the config file to use the same config as minux
@@ -142,6 +182,13 @@ make -j$(nproc)
 cp arch/x86/boot/bzImage ../
 ```
 - Now you can use the commands above (section **Boot kernel + initramfs**) to start the system.
+**Or**
+### Create the iso 
+From within the kernel folder (linux-6.18.6), run:
+```bash
+make isoimage FDARGS="initrd=/initramfs.cpio.zst console=tty0 console=ttyS0,115200" FDINITRD=/location/to/initramfs.cpio.zst
+```
 
-
-
+## Contribution to the project 
+Contact me by email if you want to contribute to the project, or just to learn the how to
+email:**w.hafid@gmail.com**
