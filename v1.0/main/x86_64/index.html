@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minux 1.0 Packages</title>
+    <style>
+        body { font-family: monospace; margin: 2em; background: #1a1a1a; color: #0f0; }
+        h1 { color: #0f0; border-bottom: 2px solid #0f0; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 0.5em 0; padding: 0.5em; background: #222; border-radius: 4px; }
+        a { color: #0f0; text-decoration: none; }
+        a:hover { color: #fff; text-decoration: underline; }
+        .dir { color: #ff0; font-weight: bold; }
+        .file { color: #0f0; }
+        .size { float: right; color: #888; }
+    </style>
+</head>
+<body>
+    <h1>Index of <span id="path">.</span></h1>
+    <ul id="filelist"><li>Loading...</li></ul>
+
+    <script>
+        // This only works with a web server, not local files
+        // due to browser security restrictions (CORS)
+        
+        async function listFiles() {
+            const path = window.location.pathname;
+            document.getElementById('path').textContent = path;
+            
+            try {
+                const response = await fetch(window.location.href);
+                const text = await response.text();
+                
+                // Parse directory listing from server response
+                // This works if server returns HTML directory listing
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                const list = document.getElementById('filelist');
+                list.innerHTML = '';
+                
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '../' && !href.startsWith('?')) {
+                        const li = document.createElement('li');
+                        const isDir = href.endsWith('/');
+                        li.className = isDir ? 'dir' : 'file';
+                        li.innerHTML = `<a href="${href}">${href}</a>`;
+                        list.appendChild(li);
+                    }
+                });
+                
+            } catch (e) {
+                document.getElementById('filelist').innerHTML = 
+                    `<li style="color:red">Error: ${e.message}</li>
+                     <li>Note: This requires a web server with directory listing enabled</li>`;
+            }
+        }
+        
+        listFiles();
+    </script>
+</body>
+</html>
